@@ -1,4 +1,4 @@
-FROM gradle:8-jdk-21-and-22-alpine AS builder
+FROM eclipse-temurin:22-jdk-jammy AS builder
 
 WORKDIR /app
 
