@@ -1,8 +1,11 @@
 package im.bigs.pg.application.payment.service
 
-import im.bigs.pg.application.payment.port.`in`.*
+import im.bigs.pg.application.payment.port.`in`.QueryFilter
+import im.bigs.pg.application.payment.port.`in`.QueryPaymentsUseCase
+import im.bigs.pg.application.payment.port.`in`.QueryResult
 import im.bigs.pg.domain.payment.PaymentSummary
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.time.Instant
 import java.util.Base64
 
@@ -25,7 +28,11 @@ class QueryPaymentsService : QueryPaymentsUseCase {
     override fun query(filter: QueryFilter): QueryResult {
         return QueryResult(
             items = emptyList(),
-            summary = PaymentSummary(count = 0, totalAmount = java.math.BigDecimal.ZERO, totalNetAmount = java.math.BigDecimal.ZERO),
+            summary = PaymentSummary(
+                count = 0,
+                totalAmount = BigDecimal.ZERO,
+                totalNetAmount = BigDecimal.ZERO
+            ),
             nextCursor = null,
             hasNext = false,
         )
