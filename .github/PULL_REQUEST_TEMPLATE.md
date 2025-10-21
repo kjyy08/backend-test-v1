@@ -28,5 +28,5 @@
 ## 체크리스트
 
 - [ ] 테스트 작성 및 통과
-- [ ] `./gradlew spotlessApply` 실행
+- [ ] `./gradlew ktlintCheck` 실행
 - [ ] Conventional Commits 준수
