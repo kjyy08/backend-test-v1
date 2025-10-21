@@ -1,12 +1,17 @@
-FROM gradle:8.14.3-jdk22 AS builder
+FROM gradle:8-jdk-21-and-22-alpine AS builder
 
 WORKDIR /app
 
-COPY build.gradle.kts settings.gradle.kts ./
 COPY gradle gradle
+COPY gradlew .
+COPY settings.gradle.kts .
+COPY build.gradle.kts .
+
 COPY modules modules
 
-RUN gradle build -x test --no-daemon
+RUN chmod +x gradlew
+
+RUN ./gradlew build -x test --no-daemon
 
 FROM eclipse-temurin:22-jre-jammy
 
