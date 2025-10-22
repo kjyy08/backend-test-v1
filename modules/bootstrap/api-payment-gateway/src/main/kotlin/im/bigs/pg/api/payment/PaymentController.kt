@@ -1,5 +1,7 @@
 package im.bigs.pg.api.payment
 
+import im.bigs.pg.api.payment.docs.PostPaymentApi
+import im.bigs.pg.api.payment.docs.QueryPaymentApi
 import im.bigs.pg.api.payment.dto.CreatePaymentRequest
 import im.bigs.pg.api.payment.dto.PaymentResponse
 import im.bigs.pg.api.payment.dto.QueryResponse
@@ -43,6 +45,7 @@ class PaymentController(
      * @return 생성된 결제 요약 응답
      */
     @PostMapping
+    @PostPaymentApi
     fun create(@RequestBody req: CreatePaymentRequest): ResponseEntity<PaymentResponse> {
         val saved = paymentUseCase.pay(
             PaymentCommand(
@@ -70,6 +73,7 @@ class PaymentController(
      * @return 목록/통계/커서 정보
      */
     @GetMapping
+    @QueryPaymentApi
     fun query(
         @RequestParam(required = false) partnerId: Long?,
         @RequestParam(required = false) status: String?,
