@@ -3,11 +3,15 @@ package im.bigs.pg.application.payment.service
 import im.bigs.pg.application.payment.port.`in`.QueryFilter
 import im.bigs.pg.application.payment.port.`in`.QueryPaymentsUseCase
 import im.bigs.pg.application.payment.port.`in`.QueryResult
+import im.bigs.pg.application.payment.port.out.PaymentOutPort
+import im.bigs.pg.application.payment.port.out.PaymentQuery
+import im.bigs.pg.application.payment.port.out.PaymentSummaryFilter
+import im.bigs.pg.domain.payment.PaymentStatus
 import im.bigs.pg.domain.payment.PaymentSummary
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.time.Instant
-import java.util.Base64
+import java.time.ZoneOffset
+import java.util.*
 
 /**
  * 결제 이력 조회 유스케이스 구현체.
@@ -15,7 +19,9 @@ import java.util.Base64
  * - 통계는 조회 조건과 동일한 집합을 대상으로 계산됩니다.
  */
 @Service
-class QueryPaymentsService : QueryPaymentsUseCase {
+class QueryPaymentsService(
+    private val paymentRepository: PaymentOutPort
+) : QueryPaymentsUseCase {
     /**
      * 필터를 기반으로 결제 내역을 조회합니다.
      *
@@ -26,15 +32,47 @@ class QueryPaymentsService : QueryPaymentsUseCase {
      * @return 조회 결과(목록/통계/커서)
      */
     override fun query(filter: QueryFilter): QueryResult {
+        val (createdAt, id) = decodeCursor(filter.cursor)
+
+        val paymentQuery = PaymentQuery(
+            partnerId = filter.partnerId,
+            status = filter.status?.let { PaymentStatus.valueOf(it) },
+            from = filter.from,
+            to = filter.to,
+            limit = filter.limit,
+            cursorCreatedAt = createdAt?.atZone(ZoneOffset.UTC)?.toLocalDateTime(),
+            cursorId = id
+        )
+
+        val paymentPage = paymentRepository.findBy(paymentQuery)
+
+        val nextCursor = if (paymentPage.hasNext) {
+            encodeCursor(
+                paymentPage.nextCursorCreatedAt?.toInstant(ZoneOffset.UTC),
+                paymentPage.nextCursorId
+            )
+        } else {
+            null
+        }
+
+        val summaryFilter = PaymentSummaryFilter(
+            partnerId = filter.partnerId,
+            status = filter.status?.let { PaymentStatus.valueOf(it) },
+            from = filter.from,
+            to = filter.to
+        )
+
+        val paymentSummaryProjection = paymentRepository.summary(summaryFilter)
+
         return QueryResult(
-            items = emptyList(),
+            items = paymentPage.items,
             summary = PaymentSummary(
-                count = 0,
-                totalAmount = BigDecimal.ZERO,
-                totalNetAmount = BigDecimal.ZERO
+                count = paymentSummaryProjection.count,
+                totalAmount = paymentSummaryProjection.totalAmount,
+                totalNetAmount = paymentSummaryProjection.totalNetAmount
             ),
-            nextCursor = null,
-            hasNext = false,
+            nextCursor = nextCursor,
+            hasNext = paymentPage.hasNext
         )
     }
 
