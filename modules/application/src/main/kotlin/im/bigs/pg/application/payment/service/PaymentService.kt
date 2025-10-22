@@ -31,7 +31,7 @@ class PaymentService(
      */
     override fun pay(command: PaymentCommand): Payment {
         val partner = partnerRepository.findById(command.partnerId)
-            ?: throw IllegalArgumentException("Partner not found: ${command.partnerId}")
+            ?: throw NoSuchElementException("Partner not found: ${command.partnerId}")
         require(partner.active) { "Partner is inactive: ${partner.id}" }
 
         val pgClient = pgClients.firstOrNull { it.supports(partner.id) }
@@ -46,13 +46,18 @@ class PaymentService(
                 productName = command.productName,
             ),
         )
-        val hardcodedRate = java.math.BigDecimal("0.0300")
-        val hardcodedFixed = java.math.BigDecimal("100")
-        val (fee, net) = FeeCalculator.calculateFee(command.amount, hardcodedRate, hardcodedFixed)
+
+        val feePolicy = feePolicyRepository.findEffectivePolicy(partner.id)
+            ?: throw IllegalArgumentException("No fee policy found for partner ${partner.id}")
+
+        val percentage = feePolicy.percentage
+        val fixed = feePolicy.fixedFee
+
+        val (fee, net) = FeeCalculator.calculateFee(command.amount, percentage, fixed)
         val payment = Payment(
             partnerId = partner.id,
             amount = command.amount,
-            appliedFeeRate = hardcodedRate,
+            appliedFeeRate = percentage,
             feeAmount = fee,
             netAmount = net,
             cardBin = command.cardBin,
