@@ -86,9 +86,9 @@ class TestPgClient(
      */
     private fun generateTestCardNumber(cardBin: String, cardLast4: String): String {
         return if (cardBin == "111111" && cardLast4 == "1111") {
-            "${cardBin}111111${cardLast4}"
+            "${cardBin}111111$cardLast4"
         } else {
-            "${cardBin}222222${cardLast4}"
+            "${cardBin}222222$cardLast4"
         }
     }
 

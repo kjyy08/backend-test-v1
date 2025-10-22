@@ -29,5 +29,4 @@ data class PgHttpError(
         val objectMapper = jacksonObjectMapper()
         return objectMapper.readValue(responseBody, errorType)
     }
-
 }
