@@ -1,0 +1,11 @@
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  server:
+    url: ${SPRINGDOC_SERVER_URL:http://localhost:8080}
+    description: ${SPRINGDOC_SERVER_DESCRIPTION:localhost}
+  packages-to-scan: im.bigs.pg.api
