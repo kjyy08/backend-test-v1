@@ -10,7 +10,7 @@ import javax.crypto.spec.SecretKeySpec
 object Aes256GcmEncryptor {
 
     private const val ALGORITHM = "AES/GCM/NoPadding"
-    private const val TAG_LENGTH_BIT = 128
+    private const val TAG_BIT = 128
 
     /**
      * 평문을 AES-256-GCM으로 암호화하고 Base64URL로 인코딩합니다.
@@ -34,7 +34,7 @@ object Aes256GcmEncryptor {
         // AES-256-GCM Cipher 초기화
         val cipher = Cipher.getInstance(ALGORITHM)
         val secretKey = SecretKeySpec(key, "AES")
-        val gcmSpec = GCMParameterSpec(TAG_LENGTH_BIT, iv)
+        val gcmSpec = GCMParameterSpec(TAG_BIT, iv)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec)
 
         // 평문을 UTF-8 바이트로 변환 후 암호화
@@ -51,7 +51,7 @@ object Aes256GcmEncryptor {
      * @param apiKey API-KEY 문자열
      * @return SHA-256 해시 결과 (32 bytes)
      */
-    private fun generateKey(apiKey: String): ByteArray {
+    fun generateKey(apiKey: String): ByteArray {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(apiKey.toByteArray(StandardCharsets.UTF_8))
     }
