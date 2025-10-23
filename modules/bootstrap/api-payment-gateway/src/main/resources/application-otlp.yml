@@ -21,13 +21,13 @@ otel:
       compression: gzip
       timeout: 10s
   traces:
-    exporter: ${OTEL_EXPORTER_ENDPOINT:none}
+    exporter: ${OTEL_EXPORTER_OPTION:none}
     sampler: parentbased_traceidratio
     sampler.arg: 1
   metrics:
-    exporter: ${OTEL_EXPORTER_ENDPOINT:none}
+    exporter: ${OTEL_EXPORTER_OPTION:none}
   logs:
-    exporter: ${OTEL_EXPORTER_ENDPOINT:none}
+    exporter: ${OTEL_EXPORTER_OPTION:none}
   instrumentation:
     micrometer:
       enabled: true
