@@ -4,6 +4,7 @@ import im.bigs.pg.application.partner.port.out.FeePolicyOutPort
 import im.bigs.pg.application.partner.port.out.PartnerOutPort
 import im.bigs.pg.application.payment.port.`in`.PaymentCommand
 import im.bigs.pg.application.payment.port.`in`.PaymentUseCase
+import im.bigs.pg.application.payment.port.out.PaymentMetricsOutPort
 import im.bigs.pg.application.payment.port.out.PaymentOutPort
 import im.bigs.pg.application.pg.port.out.PgApproveRequest
 import im.bigs.pg.application.pg.port.out.PgClientOutPort
@@ -23,6 +24,7 @@ class PaymentService(
     private val feePolicyRepository: FeePolicyOutPort,
     private val paymentRepository: PaymentOutPort,
     private val pgClients: List<PgClientOutPort>,
+    private val paymentMetricsRegistry: PaymentMetricsOutPort
 ) : PaymentUseCase {
     /**
      * 결제 승인/수수료 계산/저장을 순차적으로 수행합니다.
@@ -67,6 +69,15 @@ class PaymentService(
             status = PaymentStatus.APPROVED,
         )
 
+        recordPaymentMetrics(payment)
+
         return paymentRepository.save(payment)
+    }
+
+    private fun recordPaymentMetrics(payment: Payment) {
+        val tags = mapOf("partnerId" to payment.partnerId.toString())
+        paymentMetricsRegistry.recordValue("payment.amount", payment.amount.toDouble(), tags)
+        paymentMetricsRegistry.recordValue("payment.fee", payment.feeAmount.toDouble(), tags)
+        paymentMetricsRegistry.recordValue("payment.net", payment.netAmount.toDouble(), tags)
     }
 }

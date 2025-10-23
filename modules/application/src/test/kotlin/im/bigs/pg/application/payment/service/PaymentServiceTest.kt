@@ -3,6 +3,7 @@ package im.bigs.pg.application.payment.service
 import im.bigs.pg.application.partner.port.out.FeePolicyOutPort
 import im.bigs.pg.application.partner.port.out.PartnerOutPort
 import im.bigs.pg.application.payment.port.`in`.PaymentCommand
+import im.bigs.pg.application.payment.port.out.PaymentMetricsOutPort
 import im.bigs.pg.application.payment.port.out.PaymentOutPort
 import im.bigs.pg.application.pg.port.out.PgApproveRequest
 import im.bigs.pg.application.pg.port.out.PgApproveResult
@@ -27,6 +28,9 @@ class PaymentServiceTest {
     private val partnerRepo = mockk<PartnerOutPort>()
     private val feeRepo = mockk<FeePolicyOutPort>()
     private val paymentRepo = mockk<PaymentOutPort>()
+    private val paymentRegistry = object : PaymentMetricsOutPort {
+        override fun recordValue(name: String, value: Double, tags: Map<String, String>) {}
+    }
     private val pgClient = object : PgClientOutPort {
         override fun supports(partnerId: Long) = partnerId == 1L
         override fun approve(request: PgApproveRequest) =
@@ -40,7 +44,7 @@ class PaymentServiceTest {
     @Test
     @DisplayName("결제 시 수수료 정책을 적용하고 저장해야 한다")
     fun `결제 시 수수료 정책을 적용하고 저장해야 한다`() {
-        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient))
+        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient), paymentRegistry)
         every { partnerRepo.findById(1L) } returns Partner(1L, "TEST", "Test", true)
         every { feeRepo.findEffectivePolicy(1L, any()) } returns FeePolicy(
             id = 10L,
@@ -67,7 +71,7 @@ class PaymentServiceTest {
     @Test
     fun `존재하지 않는 Partner로 결제 시 예외가 발생해야 한다`() {
         // given
-        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient))
+        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient), paymentRegistry)
 
         val cmd = PaymentCommand(
             partnerId = 2L,
@@ -85,7 +89,7 @@ class PaymentServiceTest {
     @Test
     fun `비활성화된 Partner로 결제 시 예외가 발생해야 한다`() {
         // given
-        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient))
+        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient), paymentRegistry)
 
         val cmd = PaymentCommand(
             partnerId = 2L,
@@ -104,7 +108,7 @@ class PaymentServiceTest {
     fun `지원하는 PG Client가 없는 경우 예외가 발생해야 한다`() {
         // given
         val unSupportedPgClient = mockk<PgClientOutPort>()
-        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(unSupportedPgClient))
+        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(unSupportedPgClient), paymentRegistry)
 
         val cmd = PaymentCommand(
             partnerId = 1L,
@@ -123,7 +127,7 @@ class PaymentServiceTest {
     @Test
     fun `수수료 정책을 찾을 수 없는 경우 예외가 발생해야 한다`() {
         // given
-        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient))
+        val service = PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient), paymentRegistry)
 
         val cmd = PaymentCommand(
             partnerId = 1L,
@@ -161,7 +165,7 @@ class PaymentServiceTest {
         )
 
         val service =
-            PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient1, pgClient2))
+            PaymentService(partnerRepo, feeRepo, paymentRepo, listOf(pgClient1, pgClient2), paymentRegistry)
 
         every { partnerRepo.findById(100L) } returns Partner(100L, "PARTNER1", "파트너1", true)
         every { feeRepo.findEffectivePolicy(100L, any()) } returns FeePolicy(
