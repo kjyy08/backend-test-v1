@@ -88,7 +88,7 @@ OpenTelemetry 기반의 결제 관련 메트릭을 수집하고 시각화 할 �
 
 ### API Docs
 
-[Swagger UI](http://db.luigi99.cloud:30310)
+[Swagger UI](http://db.luigi99.cloud:30310/swagger-ui/index.html)
 
 로컬 환경없이도 테스트하실 수 있도록 배포 환경을 구축했습니다. 위 링크에서 API 테스트 가능합니다.
 
